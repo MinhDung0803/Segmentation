@@ -140,5 +140,6 @@ if __name__ == '__main__':
     mask, output = segmentation_process(img, model)
     img2 = get_part_of_body(mask, output)
     get_color(img2)
+    print("all done")
     cv2.waitKey(0)
     cv2.destroyAllWindows()
