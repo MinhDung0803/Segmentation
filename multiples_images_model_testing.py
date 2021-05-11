@@ -30,13 +30,13 @@ def get_model():
                   root='./models/HumanParsing/')
     model.classes = datasets[dataset].CLASSES
     # load model
-    model.load_parameters('./runs/mhpv1/icnet/resnet50/epoch_0406_mIoU_0.4110.params', ctx=ctx)
+    model.load_parameters('./runs/mhpv1/icnet/resnet50/epoch_0499_mIoU_0.4210.params', ctx=ctx)
     return model, all_classes
 
 
 def get_all_images():
     list_task = []
-    for directories in os.listdir('/storages/data/dungpm/code/Body_Segmentation/samples/testing_images'):
+    for directories in os.listdir('./samples/testing_images'):
         list_task.append(directories)
     # print("list of all tasks: ", list_task)
     return list_task
@@ -52,7 +52,7 @@ def get_all_images():
 
 
 def load_input_image_list(list_images_name):
-    main_path = "/storages/data/dungpm/code/Body_Segmentation/samples/testing_images/"
+    main_path = "./samples/testing_images/"
     list_images_read = []
     list_images_read_image = []
     fig_kid = plt.figure(figsize=(30, 2))
@@ -101,7 +101,7 @@ def get_part_of_body_list(mask_in_list, output_in_list, img_ori_in_list):
     ax = plt.subplot(1, len(mask_in_list), 1)
     ax.axis('off')
     j = 0
-    num_label = 6
+    num_label = 4
     for i in range(len(mask_in_list)):
         j+=1
         mask_in = mask_in_list[i]
