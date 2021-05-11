@@ -1,0 +1,19 @@
+255 255 255 background
+133 117 88 bag
+139 49 49 belt
+42 125 209 dress
+250 50 183 face
+0 0 255 hair
+51 221 255 hat
+202 142 21 left arm
+21 9 82 left leg
+140 120 240 left shoe
+102 255 102 pants
+25 212 130 right arm
+95 19 110 right leg
+255 106 77 right shoe
+159 153 206 scarf
+50 183 250 skirt
+115 51 128 sunglasses
+175 207 12 torso skin
+255 204 51 upper clothes
