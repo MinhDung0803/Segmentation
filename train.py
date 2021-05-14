@@ -23,8 +23,8 @@ def parse_args():
     """Training Options for Semantic Segmentation Experiments"""
     parser = argparse.ArgumentParser(description='MXNet Gluon Semantic Segmentation')
     # model and dataset
-    parser.add_argument('--datasetdir', type=str, default='./LV-MHP-v1/',
-                        help='dataset directory (default: ./LV-MHP-v1/)')
+    parser.add_argument('--datasetdir', type=str, default='/storages/data/dungpm/All_data/data_body_segmentation/LV-MHP-v1',
+                        help='dataset directory (default: /storages/data/dungpm/All_data/data_body_segmentation/LV-MHP-v1)')
     parser.add_argument('--model', type=str, default='fcn',
                         help='model name (default: fcn)')
     parser.add_argument('--model-zoo', type=str, default=None,
@@ -130,6 +130,7 @@ def parse_args():
     args.norm_kwargs = {'num_devices': args.ngpus} if args.syncbn else {}
     return args
 
+
 class Trainer(object):
     def __init__(self, args, logger):
         self.args = args
@@ -187,6 +188,7 @@ class Trainer(object):
 
         self.net = DataParallelModel(model, args.ctx, args.syncbn)
         self.evaluator = DataParallelModel(SegEvalModel(model), args.ctx)
+
         # resume checkpoint if needed
         if args.resume is not None:
             if os.path.isfile(args.resume):
@@ -309,3 +311,15 @@ if __name__ == "__main__":
             trainer.training(epoch)
             if not trainer.args.no_val:
                 trainer.validation(epoch)
+
+
+# resnet
+# 'resnet18'
+# 'resnet34'
+# 'resnet50'
+# 'resnet101'
+# 'resnet152'
+# 'resnest50'
+# 'resnest101'
+# 'resnest200'
+# 'resnest269'

@@ -27,15 +27,15 @@ def get_model():
                   root='./models/HumanParsing/')
     model.classes = datasets[dataset].CLASSES
     # load model
-    model.load_parameters('./models/HumanParsing/icnet_resnet50_mhpv1.params', ctx=ctx)
+    model.load_parameters('./runs/mhpv1/icnet/resnet50/epoch_0499_mIoU_0.4210.params', ctx=ctx)
     return model, all_classes
 
 
 def load_input_image(image_path):
     img_in = image.imread(image_path)
     img_ori_in = cv2.imread(image_path)
-    cv2.imshow("input image", img_ori_in)
-    print("Press any key to continue the process")
+    # cv2.imshow("input image", img_ori_in)
+    # print("Press any key to continue the process")
     cv2.waitKey()
     return img_in, img_ori_in
 
@@ -56,7 +56,7 @@ def segmentation_process(img, model):
     return mask, output
 
 
-def get_part_of_body(mask_in, output_in):
+def get_part_of_body(mask_in, output_in, img_ori):
     # get specific part of body(specific label)
     thresh = np.array(mask_in)
     num_label = int(input("Please select the number of label - upper clothes (4), pants (6): "))
@@ -135,10 +135,10 @@ def get_color(img2_in):
 if __name__ == '__main__':
     model, all_labels = get_model()
     # Load and visualize the image
-    filename = './samples/images/task04_person_600_11.jpg'
+    filename = './samples/e_146.jpg'
     img, img_ori = load_input_image(filename)
     mask, output = segmentation_process(img, model)
-    img2 = get_part_of_body(mask, output)
+    img2 = get_part_of_body(mask, output, img_ori)
     get_color(img2)
     print("all done")
     cv2.waitKey(0)

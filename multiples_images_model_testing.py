@@ -34,52 +34,56 @@ def get_model():
     return model, all_classes
 
 
-def get_all_images():
+def get_all_images(source_path):
+    print("[INFO] - Get all name of images ...")
     list_task = []
-    for directories in os.listdir('./samples/testing_images'):
+    for directories in os.listdir(source_path):
         list_task.append(directories)
-    # print("list of all tasks: ", list_task)
+    print("[INFO] - Get all name of images - DONE")
     return list_task
 
 
-# def load_input_image(image_path):
-#     img_in = image.imread(image_path)
-#     img_ori_in = cv2.imread(image_path)
-#     cv2.imshow("input image", img_ori_in)
-#     print("Press any key to continue the process")
-#     cv2.waitKey()
-#     return img_in, img_ori_in
-
-
-def load_input_image_list(list_images_name):
-    main_path = "./samples/testing_images/"
+def load_input_image_list(source_path_in, list_images_name):
+    list_images_cv2 = []
     list_images_read = []
-    list_images_read_image = []
-    fig_kid = plt.figure(figsize=(30, 2))
-    ax = plt.subplot(1, len(list_images_name)*2, 1)
-    ax.axis('off')
-    j = 0
     for i in range(len(list_images_name)):
-        j+=2
-        image_path_elem = main_path + list_images_name[i]
+        image_path_elem = source_path_in + "/" + list_images_name[i]
         img_in = image.imread(image_path_elem)
         img_ori_elem = cv2.imread(image_path_elem)
-        list_images_read.append(img_ori_elem)
-        list_images_read_image.append(img_in)
-        ax = plt.subplot(1, len(list_images_name)*2, j)
-        ax.axis('off')
-        img_ori = cv2.cvtColor(img_ori_elem, cv2.COLOR_BGR2RGB)
-        plt.imshow(img_ori)
-        plt.title(str(i))
-    fig_kid.savefig("./outputs/output_testing_images/input.png")
-    return list_images_read_image, list_images_read
+        list_images_cv2.append(img_ori_elem)
+        list_images_read.append(img_in)
+    return list_images_read, list_images_cv2
 
 
-def segmentation_process_list(img_list, model):
+# def load_input_image_list(source_path_in, list_images_name):
+#     list_images_cv2 = []
+#     list_images_read = []
+#     fig_kid = plt.figure(figsize=(30, 2))
+#     ax = plt.subplot(1, len(list_images_name)*2, 1)
+#     ax.axis('off')
+#     j = 0
+#     for i in range(len(list_images_name)):
+#         j+=2
+#         image_path_elem = source_path_in + list_images_name[i]
+#         img_in = image.imread(image_path_elem)
+#         img_ori_elem = cv2.imread(image_path_elem)
+#         list_images_cv2.append(img_ori_elem)
+#         list_images_read.append(img_in)
+#         ax = plt.subplot(1, len(list_images_name)*2, j)
+#         ax.axis('off')
+#         img_ori = cv2.cvtColor(img_ori_elem, cv2.COLOR_BGR2RGB)
+#         plt.imshow(img_ori)
+#         plt.title(str(i))
+#     fig_kid.savefig("./outputs/output_testing_images/input.png")
+#     return list_images_read, list_images_cv2
+
+
+def segmentation_process_list(img_list, model, images_list_name):
     mask_list = []
     output_list = []
     for i in range(len(img_list)):
         img = img_list[i]
+        print(images_list_name[i], i)
         # segmentation process - measure costing time
         img = test_transform(img, ctx)
         # print('img: ', img.shape)
@@ -90,20 +94,17 @@ def segmentation_process_list(img_list, model):
         # print('output: ', output.shape)
         predict = mx.nd.squeeze(mx.nd.argmax(output, 1)).asnumpy()
         mask = Image.fromarray(predict.astype('uint8'))
+        # append mask and output
         mask_list.append(mask)
         output_list.append(output)
     return mask_list, output_list
 
 
-def get_part_of_body_list(mask_in_list, output_in_list, img_ori_in_list):
+def get_part_of_body_list(mask_in_list, output_in_list, img_ori_in_list, num_label, all_images_name, source_path):
     img2_list = []
-    fig_kid = plt.figure(figsize=(30, 2))
-    ax = plt.subplot(1, len(mask_in_list), 1)
-    ax.axis('off')
-    j = 0
-    num_label = 4
+    # print("mask_in_list: ", len(mask_in_list))
+    # print("output_in_list: ", len(output_in_list))
     for i in range(len(mask_in_list)):
-        j+=1
         mask_in = mask_in_list[i]
         output_in = output_in_list[i]
         img_ori_in = img_ori_in_list[i]
@@ -117,8 +118,6 @@ def get_part_of_body_list(mask_in_list, output_in_list, img_ori_in_list):
         areas = stats[:, -1]
         areas[0] = 0  # remove the label-0 (background)
         max_label = areas.argmax()
-        # print(max_label)
-        # print(labels.shape)
         img2 = np.zeros(labels.shape)
         img2_list.append(img2)
         img2[labels == max_label] = 255
@@ -126,14 +125,63 @@ def get_part_of_body_list(mask_in_list, output_in_list, img_ori_in_list):
         img2 = img2[0:h, 0:w]  # Crop mask corresponding to the original image
         # Apply the mask to the original image
         img_ori_in[img2 == 0] = 255
-        ax = plt.subplot(1, len(mask_in_list), j)
-        ax.axis('off')
+
+        # plot out the result
+        fig = plt.figure()
+        ax = fig.add_subplot(1, 2, 1)
+        path_to_read = source_path + "/" + str(all_images_name[i])
+        image_input = cv2.imread(path_to_read)
+        image_input = cv2.cvtColor(image_input, cv2.COLOR_BGR2RGB)
+        plt.imshow(image_input)
+        ax.set_title('Input')
+        ax = fig.add_subplot(1, 2, 2)
         img_ori_in = cv2.cvtColor(img_ori_in, cv2.COLOR_BGR2RGB)
         plt.imshow(img_ori_in)
-        plt.title(str(i))
-        # plt.title(str(list_images_name[i]))
-    fig_kid.savefig("./outputs/output_testing_images/output.png")
+        ax.set_title('Result')
+        save_path = "./outputs/output_testing_images/" + "result_" + str(all_images_name[i][:-4]) + ".png"
+        fig.savefig(save_path)
     return img2_list
+
+
+# def get_part_of_body_list(mask_in_list, output_in_list, img_ori_in_list, num_label):
+#     img2_list = []
+#     fig_kid = plt.figure(figsize=(30, 2))
+#     ax = plt.subplot(1, len(mask_in_list), 1)
+#     ax.axis('off')
+#     j = 0
+#     # num_label = 4
+#     for i in range(len(mask_in_list)):
+#         j+=1
+#         mask_in = mask_in_list[i]
+#         output_in = output_in_list[i]
+#         img_ori_in = img_ori_in_list[i]
+#         # get specific part of body(specific label)
+#         thresh = np.array(mask_in)
+#         thresh[thresh == num_label] = 255  # upper clothes (4), pants (6)
+#         thresh[thresh != 255] = 0
+#         # apply connected component analysis to the thresholded image
+#         output_in = cv2.connectedComponentsWithStats(thresh, 8, cv2.CV_32S)
+#         (numLabels, labels, stats, centroids) = output_in
+#         areas = stats[:, -1]
+#         areas[0] = 0  # remove the label-0 (background)
+#         max_label = areas.argmax()
+#         # print(max_label)
+#         # print(labels.shape)
+#         img2 = np.zeros(labels.shape)
+#         img2_list.append(img2)
+#         img2[labels == max_label] = 255
+#         h, w = img_ori_in.shape[:2]
+#         img2 = img2[0:h, 0:w]  # Crop mask corresponding to the original image
+#         # Apply the mask to the original image
+#         img_ori_in[img2 == 0] = 255
+#         ax = plt.subplot(1, len(mask_in_list), j)
+#         ax.axis('off')
+#         img_ori_in = cv2.cvtColor(img_ori_in, cv2.COLOR_BGR2RGB)
+#         plt.imshow(img_ori_in)
+#         plt.title(str(i))
+#         # plt.title(str(list_images_name[i]))
+#     fig_kid.savefig("./outputs/output_testing_images/output.png")
+#     return img2_list
 
 
 def get_color_name(R, G, B, color_dataset):
@@ -188,10 +236,21 @@ def get_color(img2_in, img_ori):
 
 
 if __name__ == '__main__':
-    all_images_list = get_all_images()
-    print(all_images_list)
-    list_images_read_image_re, list_images_read_re = load_input_image_list(all_images_list)
+    # config
+    num_label_in = 4
+    source_path = "./samples/testing_segmentation"
+
+    print("[MAIN] - Testing process is starting")
+
+    # get all images name
+    all_images_list = get_all_images(source_path)
+    # load all images
+    list_images_read_out, list_images_cv2_out = load_input_image_list(source_path, all_images_list)
+    # load model
     model, all_labels = get_model()
-    mask, output = segmentation_process_list(list_images_read_image_re, model)
-    img2 = get_part_of_body_list(mask, output, list_images_read_re)
-    print("Done")
+    # segment using model
+    mask, output = segmentation_process_list(list_images_read_out, model, all_images_list)
+    # get result and save as images
+    img2 = get_part_of_body_list(mask, output, list_images_cv2_out, num_label_in, all_images_list, source_path)
+
+    print("[MAIN] - Testing process is DONE")
